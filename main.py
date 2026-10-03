@@ -29,12 +29,23 @@ def phat_song_tin_tuc():
 
         print("📱 Đang gửi báo cáo qua Telegram...")
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": ban_tin_ai, "parse_mode": "Markdown"}
-        requests.post(url, json=payload)
-        print("✅ Đã gửi Ting Ting thành công!")
+        
+        # TẠM TẮT parse_mode để tránh lỗi ký tự đặc biệt từ AI
+        payload = {"chat_id": CHAT_ID, "text": ban_tin_ai} 
+        
+        # Hứng kết quả trả về từ Telegram
+        response = requests.post(url, json=payload)
+        
+        # Kiểm tra xem Telegram có chấp nhận không
+        if response.status_code == 200:
+            print("✅ Đã gửi Ting Ting thành công!")
+        else:
+            # Nếu Telegram từ chối, in thẳng lý do ra Logs
+            print(f"❌ Telegram TỪ CHỐI gửi tin. Lý do: {response.text}")
 
     except Exception as e:
         print("❌ Lỗi hệ thống:", e)
+
 
 
 # Cài đặt lịch trình (Chạy ngầm cùng FastAPI)
