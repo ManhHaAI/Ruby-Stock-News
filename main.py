@@ -12,7 +12,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
+ print(f"🔑 Đang dùng Token bắt đầu bằng: {str(BOT_TOKEN)[:5]}***")
 
 # Hàm thực thi chính (không cần @app.get nữa vì giờ nó chạy ngầm)
 def phat_song_tin_tuc():
@@ -29,7 +29,7 @@ def phat_song_tin_tuc():
 
         print("📱 Đang gửi báo cáo qua Telegram...")
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        print(f"🔑 Đang dùng Token bắt đầu bằng: {str(BOT_TOKEN)[:5]}***")
+       
         # TẠM TẮT parse_mode để tránh lỗi ký tự đặc biệt từ AI
         payload = {"chat_id": CHAT_ID, "text": ban_tin_ai} 
         
