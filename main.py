@@ -9,9 +9,9 @@ from crawler import lay_tin_cafef_truc_tiep
 from ai_summarizer import tom_tat_tin_tuc
 
 load_dotenv()
-BOT_TOKEN = "8950212273:AAEO4U8DoTIghps-JTGZgCB9pPcHyvicQ1A"
 
-#BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN").strip()
+
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 print(f"🔑 Đang dùng Token bắt đầu bằng: ***{BOT_TOKEN[-5:]}")
 
