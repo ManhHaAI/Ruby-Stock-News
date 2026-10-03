@@ -68,4 +68,4 @@ def trang_chu():
 @app.get("/test-ngay")
 def test_ngay():
     phat_song_tin_tuc()
-    return {"message": "Đã ra lệnh phát sóng thủ công!"}
+    return {"message": "Đã ra lệnh phát sóng thủ công!"} 
