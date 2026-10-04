@@ -26,9 +26,9 @@ def tom_tat_tin_tuc(danh_sach_tin):
 
     prompt += """
     Dựa vào các tiêu đề trên, hãy thực hiện 4 việc:
-    1. Viết 1 đoạn văn ngắn (khoảng 3-4 câu) tóm tắt tình hình chung của thị trường.
+    1. Viết 1 đoạn văn ngắn (khoảng 3-4 câu) tóm tắt tình hình chung của thị trường. Đặc biệt, nếu trong tin có nhắc đến các mã cổ phiếu PC1, CII, VIX, hãy in đậm và đưa lên đầu tiên kèm theo nhận định tác động.
     2. Đánh giá nhanh xem những tin tức này mang tính Tích cực, Tiêu cực hay Trung lập đối với nhà đầu tư.
-    3. Hãy chấm điểm tâm lý thị trường theo thang điểm từ 1 đến 10 (1 là cực kỳ hoảng loạn, 10 là hưng phấn tột độ) và giải thích ngắn gọn lý do
+    3. Hãy chấm điểm tâm lý thị trường theo thang điểm từ 1 đến 10 (1 là cực kỳ hoảng loạn, 10 là hưng phấn tột độ) và giải thích ngắn gọn lý do.
     4. Hãy trình bày kết quả bằng gạch đầu dòng, sử dụng các biểu tượng cảm xúc (emoji) như 📈 (tăng), 📉 (giảm), ⚠️ (chú ý) và in đậm (bằng dấu ** **) các từ khóa quan trọng.
     Giọng văn chuyên nghiệp, gần gũi và dễ hiểu.
     """
