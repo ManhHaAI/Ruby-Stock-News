@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, BackgroundTasks
 import requests
 import os
 from dotenv import load_dotenv
@@ -10,15 +10,15 @@ from ai_summarizer import tom_tat_tin_tuc
 
 load_dotenv()
 
-
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN").strip()
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-
-# Hàm thực thi chính (không cần @app.get nữa vì giờ nó chạy ngầm)
-def phat_song_tin_tuc(chat_id):
+# ==========================================
+# 1. HÀM CÀO TIN VÀ PHÁT SÓNG (ĐÃ THÊM is_auto)
+# ==========================================
+def phat_song_tin_tuc(chat_id=CHAT_ID, is_auto=True):
     try:
-        print("⏰ Đến giờ rồi! Đang tự động thu thập tin tức...")
+        print("⏰ Đang xử lý thu thập tin tức...")
         danh_sach_tin = lay_tin_cafef_truc_tiep()
 
         if not danh_sach_tin:
@@ -28,33 +28,41 @@ def phat_song_tin_tuc(chat_id):
         print("🧠 Đang nhờ AI Gemini phân tích...")
         ban_tin_ai = tom_tat_tin_tuc(danh_sach_tin)
 
+        # --- TÍCH HỢP Ý TƯỞNG 1: PHÂN BIỆT NGỮ CẢNH ---
+        if is_auto:
+            loi_chao = "⏰ BẢN TIN CHỨNG KHOÁN TỰ ĐỘNG:\n\n"
+        else:
+            loi_chao = "✅ TRẢ LỜI YÊU CẦU CỦA SẾP:\n\n"
+            
+        ban_tin_cuoi_cung = loi_chao + ban_tin_ai
+        # ----------------------------------------------
+
         print("📱 Đang gửi báo cáo qua Telegram...")
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
        
         # TẠM TẮT parse_mode để tránh lỗi ký tự đặc biệt từ AI
-        payload = {"chat_id": chat_id, "text": ban_tin_ai} 
+        payload = {"chat_id": chat_id, "text": ban_tin_cuoi_cung} 
         
-        # Hứng kết quả trả về từ Telegram
         response = requests.post(url, json=payload)
         
-        # Kiểm tra xem Telegram có chấp nhận không
         if response.status_code == 200:
             print("✅ Đã gửi Ting Ting thành công!")
         else:
-            # Nếu Telegram từ chối, in thẳng lý do ra Logs
             print(f"❌ Telegram TỪ CHỐI gửi tin. Lý do: {response.text}")
 
     except Exception as e:
         print("❌ Lỗi hệ thống:", e)
 
 
-
-# Cài đặt lịch trình (Chạy ngầm cùng FastAPI)
+# ==========================================
+# 2. HỆ THỐNG HẸN GIỜ (APScheduler)
+# ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
     # Hẹn giờ: Chạy từ Thứ 2 đến Thứ 6 (mon-fri)
-    # Lúc 8:15 sáng (trước giờ giao dịch) và 15:10 chiều (sau giờ đóng cửa)
+    # Lúc 8:15 sáng và 15:10 chiều
+    # Vì không truyền tham số, nó sẽ tự dùng chat_id=CHAT_ID và is_auto=True
     scheduler.add_job(
         phat_song_tin_tuc, "cron", day_of_week="mon-fri", hour=8, minute=15
     )
@@ -67,22 +75,23 @@ async def lifespan(app: FastAPI):
     yield
     scheduler.shutdown()
 
-
 app = FastAPI(lifespan=lifespan)
-from fastapi import Request # Nhớ thêm Request vào dòng import fastapi ở đầu file nhé
 
-# Hàm gửi tin nhắn phản hồi nhanh
+
+# ==========================================
+# 3. HÀM GỬI TIN NHẮN NHANH CHO WEBHOOK
+# ==========================================
 def gui_tin_nhan_telegram(chat_id, text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
     requests.post(url, json=payload)
 
-# Cửa nhận thư Webhook
-# Nhớ import thêm BackgroundTasks ở đầu file
-from fastapi import Request, BackgroundTasks 
 
+# ==========================================
+# 4. CỔNG NHẬN LỆNH WEBHOOK TỪ TELEGRAM
+# ==========================================
 @app.post("/webhook")
-async def nhan_tin_nhan(request: Request, background_tasks: BackgroundTasks): # Thêm background_tasks vào đây
+async def nhan_tin_nhan(request: Request, background_tasks: BackgroundTasks):
     data = await request.json()
     
     if "message" in data and "text" in data["message"]:
@@ -93,24 +102,23 @@ async def nhan_tin_nhan(request: Request, background_tasks: BackgroundTasks): # 
             gui_tin_nhan_telegram(chat_id, "👋 Chào sếp! Gõ /tintuc để tôi cập nhật thị trường nhé!")
             
         elif tin_nhan_den == "/tintuc":
-            # 1. Gửi tin nhắn báo đang xử lý ngay lập tức
             gui_tin_nhan_telegram(chat_id, "⏳ Sếp đợi chút, tôi đang đi đọc báo CafeF và nhờ AI phân tích ngay đây...")
             
-            # 2. Đẩy việc cào tin nặng nhọc ra chạy ngầm phía sau
-            background_tasks.add_task(phat_song_tin_tuc, chat_id)
+            # ĐIỂM MẤU CHỐT: Truyền False vào cuối để báo đây KHÔNG PHẢI tin tự động
+            background_tasks.add_task(phat_song_tin_tuc, chat_id, False)
             
-    # 3. Lập tức trả về "ok" cho Telegram để khỏi bị phạt
     return {"status": "ok"}
 
 
-
+# ==========================================
+# 5. CÁC ĐƯỜNG DẪN KIỂM TRA (TEST)
+# ==========================================
 @app.get("/")
 def trang_chu():
     return {"message": "Bot đang chạy ngầm và chờ đến giờ phát sóng!"}
 
-
-# Vẫn giữ lại đường dẫn này để bạn có thể bấm chạy bằng tay (test) bất cứ lúc nào
 @app.get("/test-ngay")
 def test_ngay():
-    phat_song_tin_tuc()
-    return {"message": "Đã ra lệnh phát sóng thủ công!"} 
+    # Truyền False để khi test tay, nó cũng hiện "Trả lời yêu cầu của sếp"
+    phat_song_tin_tuc(CHAT_ID, False)
+    return {"message": "Đã ra lệnh phát sóng thủ công!"}
