@@ -13,7 +13,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-print(f"🔑 Đang dùng Token bắt đầu bằng: ***{BOT_TOKEN[-5:]}")
+
 
 # Hàm thực thi chính (không cần @app.get nữa vì giờ nó chạy ngầm)
 def phat_song_tin_tuc():
