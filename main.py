@@ -59,7 +59,7 @@ def phat_song_tin_tuc(chat_id=CHAT_ID, is_auto=True):
 # ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler(timezone="Asia/Ho_Chi_Minh")
     # Hẹn giờ: Chạy từ Thứ 2 đến Thứ 6 (mon-fri)
     # Lúc 8:15 sáng và 15:10 chiều
     # Vì không truyền tham số, nó sẽ tự dùng chat_id=CHAT_ID và is_auto=True
